@@ -1,82 +1,126 @@
-import Head from 'next/head'
+import {ExternalLinkIcon, RefreshIcon} from "@heroicons/react/outline"
+import Link from "next/link";
+import {CountUp} from 'countup.js'
+import { useEffect } from "react";
+import axios from "axios";
 
-export default function Home() {
+const Home = () => {
+
+  const visDay = 200;
+  const pegaC = 6;
+  const vtDay = pegaC * visDay;
+  const vtMonth = vtDay * 30;
+
+
+  const id = "0x5CB790783984fF41D214e03dF10e7244603E361b";
+  const gradient = 'from-cyan-100 to-cyan-400';
+  const primary = 'cyan-500';
+  const iconClass = 'inline h-5 w-5';
+  const apolloLink = 'https://apollo.pegaxy.io/personal/dashboard';
+  const earnings = `https://api-apollo.pegaxy.io/v1/earnings/historical/user/${id}`;
+  const pega = `https://api-apollo.pegaxy.io/v1/pegas/owner/user/${id}`;
+  
+  const stats = `https://api-apollo.pegaxy.io/v1/stats/game/total/user/${id}`;
+  const assets = `https://api-apollo.pegaxy.io/v1/assets/count/user/${id}`;
+  const getEarnings = async () => (await axios.get(earnings)).data;
+  const getPega = async () => (await axios.get(pega)).data;
+  const getStats = async () => (await axios.get(stats)).data;
+  const getAssets = async () => (await axios.get(assets)).data;
+
+  const auth= true;
+  const refresh = () => {
+    Promise.all([getEarnings(), getPega(), getStats(), getAssets()]).then(([ earnings, pega, stats, assets]) => {
+      let energyCount = 0;
+      pega.forEach((p: any) => {
+        energyCount += p.energy;
+      });
+      if(process.browser) {
+        
+        let demo = new CountUp('count', assets.lockedVis);
+        let pega = new CountUp('pega', assets.pega);
+        let energy = new CountUp('energy', energyCount);
+        if (!demo.error && !pega.error) {
+          demo.start();
+          pega.start();
+          energy.start();
+        } else {
+          console.error(demo.error);
+        }
+      }
+    });
+  }
+
+  useEffect(
+    () => {
+      refresh();
+    }
+  )
+
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
-
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
-
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    <div className={"bg-gradient-to-bl h-screen w-full overflow-hidden "+gradient}>
+      <div className="mx-36 my-9 rounded-2xl bg-gradient-to-bl from-slate-700 to-gray-800 text-white">
+        {auth?<>
+        
+      <div className="mx-12 my-9 w-max flex flex items-left justify-center h-full uppercase">
+        <div className="flex flex-col">
+        <span className="text-gray-300 mt-6 mb-2 text-xs font-bold">{id}</span>
+        <h1 className="text-5xl font-bold uppercase -mt-2">Portfolio Overview</h1>
+        <div className="flex justify-between w-full">
+          <div className={"flex flex-col items-center font-bold uppercase text-cyan-400"}>
+          <div className="flex space-x-3 rounded-2xl hover:bg-cyan-600 hover:text-white transition-all cursor-pointer px-2 pt-1">
+            <Link href={apolloLink}>
+            <span>View on Apollo</span>
+            </Link>
+            <ExternalLinkIcon className={iconClass} />
+            </div>
+          </div>
+          <div className={"flex flex-col items-center font-bold uppercase text-cyan-400"}>
+          <div onClick={() => refresh()} className="flex space-x-3 rounded-2xl hover:bg-cyan-600 hover:text-white transition-all cursor-pointer px-2 pt-1">
+            <span>Refresh</span>
+            <RefreshIcon className={iconClass} />
+            </div>
+          </div>
         </div>
-      </main>
+        </div>
 
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="ml-2 h-4" />
-        </a>
-      </footer>
+        <div className="mx-12 my-9 bg-red-600 uppercase font-bold h-max rounded-2xl px-3 py-1 place">sign out</div>
+        
+        </div>
+        <div className="mx-12 flex">
+        <div className="mr-18">
+          <div id="pega" className="w-max flex flex-col space-y-2 font-bold text-7xl">
+            0
+          </div>
+          <div className="flex mb-1 items-end font-bold">
+            PEGA OWNED
+          </div>
+        </div>
+        <div className="mx-36">
+          <div id="energy" className="w-max flex flex-col space-y-2 font-bold text-7xl">
+            0
+          </div>
+          <div className="flex mb-1 items-end font-bold">
+            UNUSED ENERGY
+          </div>
+        </div>
+        <div className="mx-36">
+          <div id="count" className="w-max flex flex-col space-y-2 font-bold text-7xl">
+            123
+          </div>
+          <div className="flex mb-1 items-end font-bold">
+            UNCLAIMED VIS
+          </div>
+        </div>
+
+
+        </div>
+        </>
+      : "Not authed"}
+      </div>
     </div>
   )
-}
+
+  }
+
+export default Home;
